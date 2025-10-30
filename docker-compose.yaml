@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  vm:
+    build: .
+    privileged: true                      # required for /dev/kvm access
+    devices:
+      - "/dev/kvm:/dev/kvm"
+    volumes:
+      - ./isos:/isos                      # place ISOs here
+      - ./images:/images                  # persistent qcow2 images
+    ports:
+      - "6080:6080"                       # noVNC web UI
+      - "2222:2222"                       # optional SSH to guest (port forwarded)
+    shm_size: "1g"
+    restart: unless-stopped
