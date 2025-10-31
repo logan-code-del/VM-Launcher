@@ -11,5 +11,6 @@ services:
     ports:
       - "6080:6080"                       # noVNC web UI
       - "2222:2222"                       # optional SSH to guest (port forwarded)
+      - "8000:8000"                       # VM control API
     shm_size: "1g"
     restart: unless-stopped

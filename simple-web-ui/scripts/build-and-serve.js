@@ -12,6 +12,50 @@ function build() {
   execSync('npm run build', { stdio: 'inherit' });
 }
 
+function copyPublic() {
+  const PUBLIC = path.join(__dirname, '..', 'public');
+  if (!fs.existsSync(PUBLIC)) return;
+  // copy public/* to dist/, preserving directory structure
+  try {
+    // Node 16.7+ has fs.cp which can copy recursively
+    if (typeof fs.cp === 'function') {
+      fs.cpSync(PUBLIC, DIST, { recursive: true });
+    } else {
+      // fallback: copy files manually
+      const entries = fs.readdirSync(PUBLIC, { withFileTypes: true });
+      for (const e of entries) {
+        const src = path.join(PUBLIC, e.name);
+        const dest = path.join(DIST, e.name);
+        if (e.isDirectory()) {
+          fs.mkdirSync(dest, { recursive: true });
+          const sub = fs.readdirSync(src);
+          for (const f of sub) {
+            fs.copyFileSync(path.join(src, f), path.join(dest, f));
+          }
+        } else {
+          fs.copyFileSync(src, dest);
+        }
+      }
+    }
+    console.log('Copied public/ -> dist/');
+  } catch (err) {
+    console.warn('Failed to copy public to dist:', err.message);
+  }
+}
+
+function copySrcStyles() {
+  const SRC_STYLE = path.join(__dirname, '..', 'src', 'styles', 'main.css');
+  const DEST_DIR = path.join(DIST, 'styles');
+  if (!fs.existsSync(SRC_STYLE)) return;
+  try {
+    fs.mkdirSync(DEST_DIR, { recursive: true });
+    fs.copyFileSync(SRC_STYLE, path.join(DEST_DIR, 'main.css'));
+    console.log('Copied src/styles/main.css -> dist/styles/main.css');
+  } catch (err) {
+    console.warn('Failed to copy src/styles:', err.message);
+  }
+}
+
 function mimeType(ext) {
   const map = {
     '.html': 'text/html; charset=utf-8',
@@ -79,6 +123,8 @@ function serve() {
 // Run build then serve
 try {
   build();
+  copyPublic();
+  copySrcStyles();
   serve();
 } catch (e) {
   console.error(e);
